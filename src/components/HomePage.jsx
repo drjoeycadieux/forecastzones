@@ -2,7 +2,7 @@ import { lazy, Suspense } from "react";
 import { ArrowDownRight, ArrowRight, Cloud, Layers3, LockKeyhole, PencilRuler } from "lucide-react";
 import { Link } from "react-router-dom";
 
-const MapCanvas = lazy(() => import("./MapCanvas.jsx"));
+const MapCanvas = lazy(() => import("./LeafletMap.jsx"));
 
 const capabilities = [
   {

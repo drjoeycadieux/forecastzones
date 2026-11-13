@@ -1,6 +1,6 @@
 # ForecastZones
 
-Application React pour créer des perspectives météo sur une carte MapLibre.
+Application React pour créer des perspectives météo sur une carte Leaflet.
 L’éditeur, inspiré d’un flux de travail AWIPS/PGEN, permet de dessiner plusieurs
 polygones, de les organiser par catégorie et d’exporter les données en GeoJSON.
 
@@ -32,7 +32,15 @@ utilisateurs peuvent créer un compte sur `/signup` ou se connecter sur
 GeoJSON; ils sont conservés dans le navigateur pendant la session, mais ne sont
 pas enregistrés sur un serveur.
 
-La carte politique utilise le style Positron hébergé par OpenFreeMap, avec les
-frontières administratives mises en évidence. Elle est visible sur l’accueil et
-dans l’éditeur, et nécessite une connexion Internet. La carte s’ouvre centrée
-sur le Québec, avec des repères pour Montréal et Québec.
+La carte utilise Leaflet et les tuiles OpenStreetMap sans clé API, centrées sur
+Montréal et Québec. L’éditeur permet d’y dessiner et d’exporter des polygones.
+Le fond de carte nécessite une connexion Internet.
+
+La légende de l’éditeur décrit les catégories météo et les tranches
+d’accumulation de neige en centimètres. Pour une zone de catégorie **Neige**,
+saisissez une accumulation afin d’appliquer automatiquement la couleur
+correspondante à la tranche.
+
+L’éditeur propose trois outils de dessin : le polygone par sommets, le crayon
+à main levée et le cercle. Pour le crayon et le cercle, maintenez le bouton de
+la souris, dessinez, puis relâchez pour terminer la zone.

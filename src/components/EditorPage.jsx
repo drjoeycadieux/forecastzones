@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from "react";
 import {
   ArrowDownToLine,
   Check,
+  Circle,
   ChevronDown,
   CircleHelp,
   Cloud,
@@ -11,6 +12,7 @@ import {
   LogOut,
   Map as MapIcon,
   MousePointer2,
+  Pencil,
   Plus,
   Trash2,
   Undo2,
@@ -20,18 +22,19 @@ import { signOut } from "@firebase/auth";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext.jsx";
 import { auth } from "../firebase.js";
-import MapCanvas from "./MapCanvas.jsx";
-
-const PALETTE = [
-  { name: "Orages", color: "#f59e0b" },
-  { name: "Pluie", color: "#45b7e8" },
-  { name: "Neige", color: "#c5a6ff" },
-  { name: "Vent", color: "#35cf9b" },
-  { name: "Risque", color: "#fa6687" },
-];
+import { getSnowfallColor, WEATHER_CATEGORIES } from "../constants/weather.js";
+import MapCanvas from "./LeafletMap.jsx";
+import MapLegend from "./MapLegend.jsx";
 
 const emptyCollection = { type: "FeatureCollection", features: [] };
 const newId = () => globalThis.crypto?.randomUUID?.() ?? `zone-${Date.now()}`;
+
+function getCategoryColor(category, snowfallCm) {
+  const defaultColor = WEATHER_CATEGORIES.find((item) => item.name === category).color;
+  return category === "Neige"
+    ? getSnowfallColor(snowfallCm) ?? defaultColor
+    : defaultColor;
+}
 
 function downloadGeoJSON(features) {
   const blob = new Blob(
@@ -50,21 +53,24 @@ export default function EditorPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [features, setFeatures] = useState([]);
-  const [drawing, setDrawing] = useState(false);
+  const [drawMode, setDrawMode] = useState(null);
   const [points, setPoints] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
+  const drawing = drawMode !== null;
   const selectedFeature = features.find((feature) => feature.properties.id === selectedId);
   const nextZoneNumber = features.length + 1;
   const draft = useMemo(() => {
     if (!points.length) return emptyCollection;
-    const draftFeatures = points.map((coordinates, index) => ({
-      type: "Feature",
-      properties: { id: `draft-point-${index}` },
-      geometry: { type: "Point", coordinates },
-    }));
-    if (points.length > 1) {
+    const draftFeatures = drawMode === "polygon"
+      ? points.map((coordinates, index) => ({
+          type: "Feature",
+          properties: { id: `draft-point-${index}` },
+          geometry: { type: "Point", coordinates },
+        }))
+      : [];
+    if (points.length > 1 && points.length < 3) {
       draftFeatures.push({
         type: "Feature",
         properties: {},
@@ -79,10 +85,14 @@ export default function EditorPage() {
       });
     }
     return { type: "FeatureCollection", features: draftFeatures };
-  }, [points]);
+  }, [points, drawMode]);
 
   const handleMapClick = useCallback((coordinate) => {
     setPoints((previous) => [...previous, coordinate]);
+  }, []);
+
+  const handleStrokeChange = useCallback((coordinates) => {
+    setPoints(coordinates);
   }, []);
 
   const handleSelect = useCallback((id) => {
@@ -95,9 +105,9 @@ export default function EditorPage() {
     );
   }, []);
 
-  function startDrawing() {
+  function startDrawing(mode = "polygon") {
     setPoints([]);
-    setDrawing(true);
+    setDrawMode(mode);
     setSelectedId(null);
     setFeatures((previous) =>
       previous.map((feature) => ({
@@ -107,8 +117,8 @@ export default function EditorPage() {
     );
   }
 
-  function finishDrawing() {
-    if (points.length < 3) return;
+  function finishDrawing(coordinates = points) {
+    if (coordinates.length < 3) return;
     const number = String(nextZoneNumber).padStart(2, "0");
     const feature = {
       type: "Feature",
@@ -116,12 +126,13 @@ export default function EditorPage() {
       properties: {
         id: newId(),
         name: `Zone ${number}`,
-        category: PALETTE[0].name,
-        color: PALETTE[0].color,
+        category: WEATHER_CATEGORIES[0].name,
+        color: WEATHER_CATEGORIES[0].color,
+        snowfallCm: "",
         validTime: "",
         selected: true,
       },
-      geometry: { type: "Polygon", coordinates: [[...points, points[0]]] },
+      geometry: { type: "Polygon", coordinates: [[...coordinates, coordinates[0]]] },
     };
     setFeatures((previous) => [
       ...previous.map((item) => ({
@@ -132,7 +143,15 @@ export default function EditorPage() {
     ]);
     setSelectedId(feature.properties.id);
     setPoints([]);
-    setDrawing(false);
+    setDrawMode(null);
+  }
+
+  function finishStroke(coordinates) {
+    if (coordinates.length < 3) {
+      setPoints([]);
+      return;
+    }
+    finishDrawing(coordinates);
   }
 
   function updateSelected(changes) {
@@ -156,7 +175,7 @@ export default function EditorPage() {
 
   function clearDraft() {
     setPoints([]);
-    setDrawing(false);
+    setDrawMode(null);
   }
 
   async function handleSignOut() {
@@ -184,25 +203,35 @@ export default function EditorPage() {
 
       <div className="editor-toolbar">
         <div className="toolbar-group">
-          <button className={`tool-button ${!drawing ? "tool-button-active" : ""}`} onClick={() => setDrawing(false)} title="Sélectionner">
+          <button className={`tool-button ${!drawing ? "tool-button-active" : ""}`} onClick={() => setDrawMode(null)} title="Sélectionner">
             <MousePointer2 size={16} /><span>Sélection</span>
           </button>
           <span className="toolbar-separator" />
-          <button className={`tool-button ${drawing ? "tool-button-active draw-active" : ""}`} onClick={startDrawing}>
-            <Plus size={16} /><span>Dessiner un polygone</span>
+          <button className={`tool-button ${drawMode === "polygon" ? "tool-button-active draw-active" : ""}`} onClick={() => startDrawing("polygon")}>
+            <Plus size={16} /><span>Polygone</span>
+          </button>
+          <button className={`tool-button ${drawMode === "freehand" ? "tool-button-active draw-active" : ""}`} onClick={() => startDrawing("freehand")} title="Maintenir le clic et dessiner à main levée">
+            <Pencil size={15} /><span>Crayon</span>
+          </button>
+          <button className={`tool-button ${drawMode === "circle" ? "tool-button-active draw-active" : ""}`} onClick={() => startDrawing("circle")} title="Maintenir le clic et tirer pour dessiner un cercle">
+            <Circle size={15} /><span>Cercle</span>
           </button>
           {drawing && (
             <>
               <span className="toolbar-separator" />
-              <button className="tool-button" onClick={undoPoint} disabled={!points.length} title="Annuler le dernier point">
-                <Undo2 size={16} /><span>Annuler</span>
-              </button>
+              {drawMode === "polygon" && (
+                <button className="tool-button" onClick={undoPoint} disabled={!points.length} title="Annuler le dernier point">
+                  <Undo2 size={16} /><span>Annuler</span>
+                </button>
+              )}
               <button className="tool-button" onClick={clearDraft} title="Abandonner le dessin">
                 <X size={16} /><span>Annuler le dessin</span>
               </button>
-              <button className="button button-primary button-finish" onClick={finishDrawing} disabled={points.length < 3}>
-                <Check size={15} /> Terminer <span className="point-count">{points.length}</span>
-              </button>
+              {drawMode === "polygon" && (
+                <button className="button button-primary button-finish" onClick={finishDrawing} disabled={points.length < 3}>
+                  <Check size={15} /> Terminer <span className="point-count">{points.length}</span>
+                </button>
+              )}
             </>
           )}
         </div>
@@ -227,19 +256,34 @@ export default function EditorPage() {
           <MapCanvas
             features={features}
             draft={draft}
-            drawing={drawing}
+            drawMode={drawMode}
             onMapClick={handleMapClick}
+            onStrokeChange={handleStrokeChange}
+            onStrokeEnd={finishStroke}
             onSelect={handleSelect}
           />
-          <div className="map-info-pill"><MapIcon size={14} /> Fond de carte Liberty</div>
+          <div className="map-info-pill"><MapIcon size={14} /> Carte OpenStreetMap</div>
+          <MapLegend />
           {drawing && (
             <div className="draw-instruction">
               <Crosshair size={16} />
               <span>
-                <strong>Dessin de polygone</strong>
-                Cliquez sur la carte pour ajouter des sommets
+                <strong>
+                  {drawMode === "polygon"
+                    ? "Dessin de polygone"
+                    : drawMode === "freehand"
+                      ? "Crayon à main levée"
+                      : "Dessin de cercle"}
+                </strong>
+                {drawMode === "polygon"
+                  ? "Cliquez sur la carte pour ajouter des sommets"
+                  : drawMode === "freehand"
+                    ? "Maintenez le clic et dessinez votre forme"
+                    : "Maintenez le clic et tirez pour définir le rayon"}
               </span>
-              <span className="draw-vertex-count">{points.length} points</span>
+              <span className="draw-vertex-count">
+                {drawMode === "circle" ? "Relâchez pour terminer" : `${points.length} points`}
+              </span>
             </div>
           )}
           {!sidebarOpen && (
@@ -321,12 +365,42 @@ export default function EditorPage() {
                     const category = event.target.value;
                     updateSelected({
                       category,
-                      color: PALETTE.find((item) => item.name === category).color,
+                      color: getCategoryColor(
+                        category,
+                        selectedFeature.properties.snowfallCm,
+                      ),
                     });
                   }}
                 >
-                  {PALETTE.map(({ name }) => <option key={name}>{name}</option>)}
+                  {WEATHER_CATEGORIES.map(({ name }) => <option key={name}>{name}</option>)}
                 </select>
+                {selectedFeature.properties.category === "Neige" && (
+                  <>
+                    <label className="field-label" htmlFor="zone-snowfall">
+                      Accumulation de neige
+                    </label>
+                    <div className="unit-input-wrap">
+                      <input
+                        id="zone-snowfall"
+                        className="property-input"
+                        type="number"
+                        min="0"
+                        step="1"
+                        placeholder="Ex. 8"
+                        value={selectedFeature.properties.snowfallCm}
+                        onChange={(event) => {
+                          const snowfallCm = event.target.value;
+                          updateSelected({
+                            snowfallCm,
+                            color: getCategoryColor("Neige", snowfallCm),
+                          });
+                        }}
+                      />
+                      <span>cm</span>
+                    </div>
+                    <p className="field-hint">La couleur suit la tranche indiquée dans la légende.</p>
+                  </>
+                )}
                 <label className="field-label" htmlFor="zone-valid-time">Validité / période</label>
                 <input
                   id="zone-valid-time"
@@ -336,12 +410,20 @@ export default function EditorPage() {
                   onChange={(event) => updateSelected({ validTime: event.target.value })}
                 />
                 <div className="color-row">
-                  {PALETTE.map(({ name, color }) => (
+                  {WEATHER_CATEGORIES.map(({ name, color }) => (
                     <button
                       key={name}
                       className={`color-swatch ${selectedFeature.properties.color === color ? "color-swatch-active" : ""}`}
                       style={{ "--zone-color": color }}
-                      onClick={() => updateSelected({ color, category: name })}
+                      onClick={() =>
+                        updateSelected({
+                          color: getCategoryColor(
+                            name,
+                            selectedFeature.properties.snowfallCm,
+                          ),
+                          category: name,
+                        })
+                      }
                       aria-label={`Couleur ${name}`}
                       title={name}
                     />

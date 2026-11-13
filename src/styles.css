@@ -62,8 +62,6 @@ button { color: inherit; }
 .visual-date { color: #748391; }
 .map-preview { position: relative; height: clamp(250px, 29vw, 340px); overflow: hidden; background-color: #dce7eb; }
 .map-preview-loading { position: absolute; inset: 0; display: grid; place-items: center; color: #64737b; background: #dce7eb; font-size: 11px; }
-.hero-visual .maplibregl-ctrl-attrib { font-size: 7px !important; }
-.hero-visual .maplibregl-ctrl-attrib a { color: #52616a; }
 .visual-footer { justify-content: flex-start; gap: 19px; border-top: 1px solid var(--line); }
 .visual-footer > span { display: flex; align-items: center; gap: 5px; }
 .visual-footer .visual-footer-right { margin-left: auto; color: #8594a1; }
@@ -135,7 +133,17 @@ button { color: inherit; }
 .editor-body { position: relative; min-height: 0; flex: 1; display: flex; }
 .map-area { position: relative; min-width: 0; flex: 1; overflow: hidden; background: #cbd4d2; }
 .map-canvas { position: absolute; inset: 0; }
-.map-info-pill { position: absolute; z-index: 1; bottom: 22px; left: 12px; display: flex; align-items: center; gap: 7px; padding: 7px 10px; border: 1px solid rgba(255,255,255,.14); border-radius: 5px; color: #cfdae2; background: rgba(16,25,35,.85); box-shadow: 0 2px 8px rgba(0,0,0,.14); font-family: "DM Mono", monospace; font-size: 9px; pointer-events: none; }
+.map-info-pill { position: absolute; z-index: 1; top: 72px; left: 12px; display: flex; align-items: center; gap: 7px; padding: 7px 10px; border: 1px solid rgba(255,255,255,.14); border-radius: 5px; color: #cfdae2; background: rgba(16,25,35,.85); box-shadow: 0 2px 8px rgba(0,0,0,.14); font-family: "DM Mono", monospace; font-size: 9px; pointer-events: none; }
+.map-legend { position: absolute; z-index: 2; bottom: 13px; left: 12px; width: min(410px, calc(100% - 24px)); padding: 10px 12px; border: 1px solid rgba(165,184,203,.2); border-radius: 7px; color: #dce5ec; background: rgba(16,25,35,.93); box-shadow: 0 5px 20px rgba(0,0,0,.2); font-family: "DM Sans", sans-serif; pointer-events: none; }
+.map-legend-heading, .snow-legend-heading { display: flex; align-items: center; justify-content: space-between; color: #94a3af; font-family: "DM Mono", monospace; font-size: 8px; letter-spacing: .8px; }
+.weather-legend { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 5px; margin-top: 9px; padding-bottom: 9px; border-bottom: 1px solid rgba(165,184,203,.13); }
+.weather-legend-item { display: flex; align-items: center; gap: 5px; color: #d0d9e1; font-size: 9px; white-space: nowrap; }
+.weather-legend-dot { width: 8px; height: 8px; flex: 0 0 8px; border-radius: 50%; background: var(--legend-color); }
+.snow-legend { margin-top: 9px; }
+.snow-legend-unit { color: #c4d2dc; font-size: 9px; letter-spacing: 0; }
+.snow-legend-levels { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px; margin-top: 7px; }
+.snow-legend-item { display: flex; align-items: center; gap: 6px; color: #dce5ec; font-size: 9px; white-space: nowrap; }
+.snow-legend-swatch { width: 20px; height: 10px; flex: 0 0 20px; border: 1px solid rgba(255,255,255,.25); border-radius: 3px; background: var(--legend-color); }
 .draw-instruction { position: absolute; z-index: 1; top: 13px; left: 50%; display: flex; align-items: center; gap: 10px; padding: 10px 13px; border: 1px solid rgba(66,212,176,.3); border-radius: 7px; color: var(--teal); background: rgba(17,29,39,.94); box-shadow: 0 5px 20px rgba(0,0,0,.18); transform: translateX(-50%); pointer-events: none; }
 .draw-instruction > span:first-of-type { display: grid; gap: 3px; color: #9eacb8; font-size: 9px; white-space: nowrap; }
 .draw-instruction strong { color: #e4ebf2; font-size: 10px; }
@@ -165,6 +173,9 @@ button { color: inherit; }
 .delete-zone:hover { border-color: rgba(250,102,135,.24); color: #fa6687; background: rgba(250,102,135,.07); }
 .field-label { display: block; margin: 10px 0 5px; font-size: 9px; }
 .property-input { height: 34px; border-radius: 4px; font-size: 10px; }.property-select { color: #d9e2e8; cursor: pointer; }
+.unit-input-wrap { position: relative; }.unit-input-wrap input { padding-right: 38px; }
+.unit-input-wrap > span { position: absolute; top: 50%; right: 12px; color: #82909f; font-size: 10px; transform: translateY(-50%); pointer-events: none; }
+.field-hint { margin: 5px 0 0; color: #81909d; font-size: 9px; line-height: 1.45; }
 .color-row { display: flex; align-items: center; gap: 10px; margin-top: 13px; }
 .color-swatch { width: 18px; height: 18px; border: 2px solid transparent; border-radius: 50%; background: var(--zone-color); cursor: pointer; transition: transform .16s, box-shadow .16s; }
 .color-swatch:hover { transform: scale(1.13); }.color-swatch-active { box-shadow: 0 0 0 2px #151f2a, 0 0 0 3px var(--zone-color); }
@@ -174,9 +185,10 @@ button { color: inherit; }
 .editor-statusbar { height: 25px; flex: 0 0 25px; display: flex; align-items: center; gap: 18px; padding: 0 11px; border-top: 1px solid var(--line); color: #7e8c99; background: #131d27; font-family: "DM Mono", monospace; font-size: 8px; letter-spacing: .2px; }
 .editor-statusbar > span:first-child { color: #b0bdc7; }.editor-statusbar .status-dot { width: 5px; height: 5px; margin-right: 4px; }
 .statusbar-right { display: flex; align-items: center; gap: 5px; margin-left: auto; color: #758491; }
-.maplibregl-ctrl-group { overflow: hidden; border: 1px solid rgba(20,33,45,.2) !important; border-radius: 5px !important; box-shadow: 0 2px 8px rgba(0,0,0,.18) !important; }
-.maplibregl-ctrl-group button { width: 31px !important; height: 31px !important; }
-.maplibregl-ctrl-attrib { font-size: 9px !important; }
+.leaflet-map { position: relative; z-index: 0; width: 100%; height: 100%; background: #dce7eb; font-family: "DM Sans", sans-serif; }
+.leaflet-container .leaflet-control-attribution { font-size: 8px; }
+.hero-visual .leaflet-container .leaflet-control-attribution { font-size: 7px; }
+.leaflet-container .leaflet-tooltip { border: 1px solid rgba(130, 119, 103, .22); border-radius: 4px; color: #433d34; background: rgba(248, 245, 237, .95); box-shadow: 0 1px 5px rgba(0,0,0,.12); font-size: 10px; font-weight: 600; }
 
 @media (min-width: 1440px) {
   .editor-sidebar { width: 330px; flex-basis: 330px; }
@@ -195,8 +207,12 @@ button { color: inherit; }
   .capability-grid { grid-template-columns: 1fr; gap: 9px; }.capability-card { min-height: 125px; }.section-heading h2 { font-size: 19px; }.capabilities { padding-bottom: 48px; }.landing-footer { min-height: 61px; }.landing-footer > span { max-width: 150px; text-align: right; line-height: 1.5; }
   .auth-card { padding: 28px 23px; }.auth-back { top: 20px; left: 20px; }
   .editor-header { height: 48px; flex-basis: 48px; padding: 0 10px; }.editor-brand { gap: 7px; }.editor-brand .brand-mark { width: 26px; height: 26px; }.editor-brand-name { font-size: 12px; }.workspace-label { font-size: 7px; letter-spacing: .6px; }.header-divider { margin: 0 1px; }.user-email { display: none; }
-  .editor-toolbar { height: 43px; flex-basis: 43px; padding: 0 7px; }.tool-button { gap: 5px; padding: 0 6px; font-size: 9px; }.toolbar-separator { margin: 0 2px; }.toolbar-group { gap: 1px; }.map-status { display: none; }.toolbar-right { gap: 3px; }.export-button span, .export-button > span { display: none; }
+  .editor-toolbar { height: 43px; flex-basis: 43px; justify-content: flex-start; gap: 8px; padding: 0 7px; overflow-x: auto; scrollbar-width: none; }.editor-toolbar::-webkit-scrollbar { display: none; }.toolbar-group { flex: 0 0 auto; gap: 1px; }.tool-button { gap: 5px; padding: 0 6px; font-size: 9px; }.toolbar-separator { margin: 0 2px; }.map-status { display: none; }.toolbar-right { gap: 3px; margin-left: auto; }.export-button span, .export-button > span { display: none; }
   .editor-sidebar { position: absolute; z-index: 2; top: 0; right: 0; bottom: 0; width: min(300px, calc(100% - 48px)); box-shadow: -8px 0 25px rgba(0,0,0,.24); }
+  .map-legend { bottom: 32px; left: 8px; width: calc(100% - 16px); padding: 8px 9px; }
+  .map-info-pill { top: 61px; left: 8px; padding: 6px 8px; font-size: 8px; }
+  .weather-legend { gap: 3px; }.weather-legend-item { gap: 4px; font-size: 8px; }
+  .snow-legend-levels { gap: 4px; }.snow-legend-item { gap: 4px; font-size: 8px; }.snow-legend-swatch { width: 16px; flex-basis: 16px; }
   .draw-instruction { top: 9px; max-width: calc(100% - 20px); gap: 7px; padding: 8px 9px; }.draw-instruction > span:first-of-type { font-size: 8px; }.draw-instruction strong { font-size: 9px; }
   .editor-statusbar { gap: 9px; font-size: 7px; }.statusbar-right { display: none !important; }
 }
