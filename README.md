@@ -32,6 +32,7 @@ utilisateurs peuvent créer un compte sur `/signup` ou se connecter sur
 GeoJSON; ils sont conservés dans le navigateur pendant la session, mais ne sont
 pas enregistrés sur un serveur.
 
-Le fond de carte utilise le style Liberty hébergé par OpenFreeMap et nécessite
-une connexion Internet. La carte s’ouvre centrée sur le sud du Québec, avec
-Montréal et Québec dans la zone visible.
+La carte politique utilise le style Positron hébergé par OpenFreeMap, avec les
+frontières administratives mises en évidence. Elle est visible sur l’accueil et
+dans l’éditeur, et nécessite une connexion Internet. La carte s’ouvre centrée
+sur le Québec, avec des repères pour Montréal et Québec.
